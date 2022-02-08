@@ -1,0 +1,5 @@
+{
+    "realm": "keycloak-demo",
+    "url": "http://localhost/auth",
+    "clientId": "vuejs-client"
+}

@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title></title>
+<script src="keycloak.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/vue@2/dist/vue.js"></script>
+<script type="text/javascript">
+
+var global = {
+    keycloak: null,
+    app: null
+};
+
+function initKeycloak() {
+    global.keycloak = new Keycloak({
+        realm: "keycloak-demo",
+        url: "http://css.local/auth",
+        clientId: "vuejs-client",
+        
+    });
+    global.keycloak.init({ onLoad: 'login-required' }).then(function(authenticated) {
+        alert(authenticated ? 'authenticated' : 'not authenticated');
+
+        if (authenticated) {
+            global.app = initVueJs();
+            global.app.getBorrower(1);
+        }
+    }).catch(function(err) {
+        console.log(err);
+        alert('failed to initialize');
+    });
+}
+
+function initVueJs() {
+    var app = new Vue({
+        el: '#app',
+        data: {
+            message: 'Hello Vue!'
+        },
+        methods: {
+            getBorrower: function(borrowerId) {
+                console.log('was called');
+                var xhr = new XMLHttpRequest();
+                xhr.onreadystatechange = function(v) {
+                    if (this.readyState === XMLHttpRequest.DONE && this.status === 200) {
+                        v.message = xhr.responseText;
+                    } else {
+                        v.message = xhr.statusText;
+                    }
+                }.bind(xhr, this);
+                xhr.open('GET', '/dsl-dms-server/dms/api/v1/borrower/' + borrowerId);
+                xhr.setRequestHeader('Accept', 'application/json');
+                xhr.setRequestHeader('Authorization', 'Bearer ' + global.keycloak.token);
+                xhr.send();
+            }
+        }
+    });
+    return app;
+}
+
+function init() {
+    initKeycloak();
+
+    // var app = initVueJs();
+    // app.getBorrower(1);
+}
+</script>
+</head>
+
+<body onload="init()">
+
+    <div id="app">
+        {{ message }}
+    </div>
+
+</body>
+</html>
